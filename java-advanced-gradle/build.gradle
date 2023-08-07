@@ -1,0 +1,82 @@
+plugins {
+    id 'groovy'
+    id 'java-library'
+    id 'maven-publish'
+    id 'signing'
+    id 'io.codearte.nexus-staging' version '0.21.2'
+}
+
+group = 'com.cedarsoftware'
+description = 'json-command-servlet'
+version = '1.9.1'
+
+// Example builds
+//gradle clean build
+//gradle clean build publishToMavenLocal
+//gradle clean build publish upload closeAndReleaseRepository
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+wrapper {
+    distributionType = Wrapper.DistributionType.ALL
+}
+
+jar {
+    enabled = true
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.codehaus.groovy:groovy:3.0.9'
+    implementation 'com.cedarsoftware:java-util:1.68.0'
+    implementation 'com.cedarsoftware:json-io:4.13.0'
+    implementation 'org.springframework:spring-context:5.3.14'
+    implementation 'org.springframework:spring-web:5.3.14'
+    implementation 'javax.servlet:javax.servlet-api:4.0.1'
+    implementation 'javax.annotation:javax.annotation-api:1.3.2'
+    implementation 'org.springframework.boot:spring-boot-starter-logging:2.6.2'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test:2.6.2'
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    from sourceSets.main.allSource
+    archiveClassifier.set('sources')
+}
+
+task groovydocJar(type: Jar, dependsOn: groovydoc) {
+    from groovydoc
+    archiveClassifier.set('javadoc')
+}
+
+artifacts {
+    archives sourcesJar
+    archives groovydocJar
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            artifact sourcesJar
+            artifact groovydocJar
+            from components.java
+        }
+    }
+}
+
+signing {
+    sign configurations.archives
+    sign publishing.publications.maven
+}
+
+tasks.withType(Sign) {
+    onlyIf { !version.endsWith("SNAPSHOT") }
+}
+
+
